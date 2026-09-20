@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Syni-OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<link rel="stylesheet" href="css/core.css">
+<link rel="stylesheet" href="css/desktop.css">
+<link rel="stylesheet" href="css/windows.css">
+<link rel="stylesheet" href="css/apps.css">
+<link rel="stylesheet" href="css/chat.css">
+<link rel="stylesheet" href="css/ciri.css">
+<link rel="stylesheet" href="css/media-player.css">
+<link rel="stylesheet" href="css/menus.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body id="desktop-area" role="application">
+
+<!-- ═══════════ HUD / OVERLAYS ═══════════ -->
+<div id="fps-counter" aria-live="polite"><span id="fps-val">60</span> FPS</div>
+<div id="battery-status" title="Device Status">
+  <i class="fas fa-laptop" id="battery-icon"></i>
+  <span id="battery-text">Online</span>
+</div>
+<div id="session-timer">
+  <i class="fas fa-clock" style="margin-right:6px;"></i>
+  <span id="session-time">00:00:00</span>
+</div>
+
+<div id="top-left-menu">
+  <div class="menu-time" id="menu-time">--:--</div>
+  <div class="menu-day" id="menu-day">-----</div>
+  <div class="menu-status"><span class="status-dot"></span><span>Website Up To Date</span></div>
+</div>
+
+<div id="grammar-icon" onclick="openGrammar()" title="Grammar Checker"><i class="fas fa-check-double"></i></div>
+<div id="noti-bell" onclick="toggleNoti()"><i class="fas fa-bell"></i><span id="noti-dot"></span></div>
+<div id="notepad-icon" onclick="openNotepad()" title="Notepad"><i class="fas fa-sticky-note"></i></div>
+<div id="calculator-icon" onclick="openCalculator()" title="Calculator"><i class="fas fa-calculator"></i></div>
+<div id="wordcount-icon" onclick="openWordCount()" title="Word Counter"><i class="fas fa-file-alt"></i></div>
+<div id="timer-icon" onclick="toggleTimerWidget()" title="Timer"><i class="fas fa-stopwatch"></i></div>
+<div id="chat-icon" onclick="toggleChat()" title="Chat"><i class="fas fa-comments"></i><span id="chat-noti-dot"></span></div>
+
+<div id="noti-dropdown"><div id="noti-list"></div></div>
+
+<!-- ═══════════ DIALOGS: WALLPAPER + TASKBAR ═══════════ -->
+<dialog id="wp-menu" aria-label="Wallpaper Gallery">
+  <header class="wp-modal-header">
+    <h2>WALLPAPER GALLERY</h2>
+    <i class="fas fa-times close-icon" onclick="wpCloseMenu()" role="button" tabindex="0"></i>
+  </header>
+  <div class="wp-controls-row">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="slideshow-btn" onclick="wpPrev()"><i class="fas fa-chevron-left"></i></button>
+      <span id="wp-counter" style="color:#fff;font-size:14px;font-weight:600;">1 / 12</span>
+      <button class="slideshow-btn" onclick="wpNext()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div style="color:#888;font-size:12px;"><i class="fas fa-keyboard"></i> ← → to change</div>
+  </div>
+  <div class="wp-grid-container">
+    <h3 class="wp-section-title">Available Wallpapers</h3>
+    <div id="wp-grid" class="wp-grid"></div>
+  </div>
+</dialog>
+
+<dialog id="taskbar-menu" aria-label="Taskbar Appearance">
+  <header class="wp-modal-header">
+    <h2>TASKBAR APPEARANCE</h2>
+    <i class="fas fa-times close-icon" onclick="tbCloseMenu()" role="button" tabindex="0"></i>
+  </header>
+  <div class="tb-body">
+    <div class="tb-left">
+      <div id="tb-canvas-wrap">
+        <canvas id="tb-color-canvas" width="280" height="280"></canvas>
+        <div id="tb-color-cursor"></div>
+      </div>
+      <div id="tb-preview-row">
+        <div id="tb-preview-swatch"></div>
+        <div id="tb-preview-info">
+          <div id="tb-preview-hex">#0a0a0a</div>
+          <div id="tb-preview-rgb">rgb(10, 10, 10)</div>
+        </div>
+      </div>
+      <div class="tb-slider-row">
+        <label>Opacity</label>
+        <input type="range" id="tb-opacity" min="0" max="100" value="80">
+        <span id="tb-opacity-val">80%</span>
+      </div>
+    </div>
+    <div class="tb-right">
+      <h3 class="wp-section-title">Presets</h3>
+      <div id="tb-grid" class="tb-grid"></div>
+    </div>
+  </div>
+  <div class="tb-footer">
+    <button class="slideshow-btn" onclick="tbReset()">Reset</button>
+    <button class="slideshow-btn tb-apply-btn" onclick="tbApplyCustom()">Apply</button>
+  </div>
+</dialog>
+
+<div id="game-mode-indicator">Fullscreen mode (Press ESC to exit)</div>
+
+<!-- ═══════════ UTILITY WINDOWS ═══════════ -->
+<!-- Grammar -->
+<div id="win-grammar" class="window minimized header-visible" style="display:none; z-index:500; width:500px; height:450px; top:50%; left:50%; transform:translate(-50%,-50%) scale(.95);">
+  <div class="win-header" onmousedown="DragSystem.startWinDrag(event,'grammar')">
+    <div class="win-title"><i class="fas fa-check-double" style="margin-right:8px;"></i>Grammar Checker</div>
+    <div class="win-controls"><div class="win-btn btn-min" onclick="minimizeWindow('grammar')"></div><div class="win-btn btn-close" onclick="closeGrammar()"></div></div>
+  </div>
+  <div class="win-body" style="background:#1a1a1a;display:flex;flex-direction:column;padding:15px;gap:8px;">
+    <textarea id="grammar-input" style="flex:1;background:#0d0d0d;border:1px solid #333;border-radius:6px;padding:12px;color:#fff;resize:none;outline:none;font-size:14px;min-height:100px;font-family:'Segoe UI',sans-serif;" placeholder="Paste your text here..."></textarea>
+    <div style="display:flex;gap:8px;">
+      <button onclick="checkGrammar()" style="flex:1;background:#2b65f6;border:none;border-radius:6px;color:#fff;padding:10px;cursor:pointer;font-weight:600;">Check & Fix</button>
+      <button onclick="grammarClear()" style="background:#c62828;border:none;border-radius:6px;color:#fff;padding:10px 20px;cursor:pointer;">Clear</button>
+    </div>
+    <div id="grammar-result" style="background:#0d0d0d;border:1px solid #333;border-radius:6px;padding:12px;flex:1;overflow-y:auto;color:#fff;font-size:14px;min-height:120px;font-family:'Segoe UI',sans-serif;line-height:1.8;max-height:150px;">
+      <div style="color:#888;">Paste text above and click "Check & Fix"</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #333;padding-top:8px;">
+      <button onclick="grammarSample()" style="background:#222;border:1px solid #444;border-radius:4px;color:#aaa;padding:4px 12px;cursor:pointer;font-size:12px;">📝 Load Sample</button>
+      <span style="color:#555;font-size:11px;align-self:center;">Fixes spelling, grammar, and punctuation</span>
+    </div>
+  </div>
+</div>
+
+<!-- Word Counter -->
+<div id="win-wordcount" class="window minimized header-visible" style="display:none; z-index:500; width:480px; height:520px; top:50%; left:50%; transform:translate(-50%,-50%) scale(.95);">
+  <div class="win-header" onmousedown="DragSystem.startWinDrag(event,'wordcount')">
+    <div class="win-title"><i class="fas fa-file-alt" style="margin-right:8px;"></i>Word Counter</div>
+    <div class="win-controls"><div class="win-btn btn-min" onclick="minimizeWindow('wordcount')"></div><div class="win-btn btn-close" onclick="closeWordCount()"></div></div>
+  </div>
+  <div class="win-body" style="background:#1a1a1a;display:flex;flex-direction:column;padding:15px;gap:10px;">
+    <textarea id="wordcount-input" style="width:100%;flex:0 0 120px;background:#0d0d0d;border:1px solid #333;border-radius:6px;padding:12px;color:#fff;resize:none;outline:none;font-size:14px;font-family:'Segoe UI',sans-serif;min-height:120px;max-height:120px;" placeholder="Paste or type your text here..."></textarea>
+    <div style="display:flex;gap:10px;flex-shrink:0;">
+      <button onclick="countWordsNow()" style="flex:1;background:#2b65f6;border:none;border-radius:6px;color:#fff;padding:12px;cursor:pointer;font-weight:600;">Count Words</button>
+      <button onclick="wordCountClear()" style="background:#c62828;border:none;border-radius:6px;color:#fff;padding:12px 20px;cursor:pointer;">Clear</button>
+    </div>
+    <div id="wordcount-result" style="flex:1;background:#0d0d0d;border:1px solid #333;border-radius:6px;padding:15px;color:#fff;font-size:14px;font-family:'Segoe UI',sans-serif;line-height:1.8;overflow-y:auto;min-height:150px;max-height:250px;">
+      <div style="color:#888;">Paste your text above and click "Count Words"</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #333;padding-top:10px;flex-shrink:0;">
+      <button onclick="wordCountSample()" style="background:#222;border:1px solid #444;border-radius:4px;color:#aaa;padding:4px 12px;cursor:pointer;font-size:12px;">Load Sample</button>
+      <span style="color:#555;font-size:11px;align-self:center;">Counts words, characters, sentences & more</span>
+    </div>
+  </div>
+</div>
+
+<!-- Calculator -->
+<div id="win-calculator" class="window minimized header-visible" style="display:none; z-index:500; width:280px; height:400px; top:50%; left:50%; transform:translate(-50%,-50%) scale(.95);">
+  <div class="win-header" onmousedown="DragSystem.startWinDrag(event,'calculator')">
+    <div class="win-title"><i class="fas fa-calculator" style="margin-right:8px;"></i>Calculator</div>
+    <div class="win-controls"><div class="win-btn btn-min" onclick="minimizeWindow('calculator')"></div><div class="win-btn btn-close" onclick="closeCalculator()"></div></div>
+  </div>
+  <div class="win-body" style="background:#1a1a1a;display:flex;flex-direction:column;padding:15px;overflow:hidden;">
+    <div style="background:#0d0d0d;border-radius:8px;padding:15px;margin-bottom:10px;border:1px solid #333;min-height:70px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;overflow:hidden;">
+      <div id="calc-display" style="color:#fff;font-size:32px;font-family:'Courier New',monospace;width:100%;text-align:right;word-wrap:break-word;overflow-wrap:break-word;transition:all .2s;">0</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:1;">
+      <button class="calc-btn op-btn" data-action="clear">AC</button>
+      <button class="calc-btn op-btn" data-action="negate">+/-</button>
+      <button class="calc-btn op-btn" data-action="percent">%</button>
+      <button class="calc-btn op-btn" data-action="divide">÷</button>
+      <button class="calc-btn num-btn" data-action="7">7</button>
+      <button class="calc-btn num-btn" data-action="8">8</button>
+      <button class="calc-btn num-btn" data-action="9">9</button>
+      <button class="calc-btn op-btn" data-action="multiply">×</button>
+      <button class="calc-btn num-btn" data-action="4">4</button>
+      <button class="calc-btn num-btn" data-action="5">5</button>
+      <button class="calc-btn num-btn" data-action="6">6</button>
+      <button class="calc-btn op-btn" data-action="subtract">−</button>
+      <button class="calc-btn num-btn" data-action="1">1</button>
+      <button class="calc-btn num-btn" data-action="2">2</button>
+      <button class="calc-btn num-btn" data-action="3">3</button>
+      <button class="calc-btn op-btn" data-action="add">+</button>
+      <button class="calc-btn num-btn" data-action="0" style="grid-column:span 2;">0</button>
+      <button class="calc-btn num-btn" data-action="decimal">.</button>
+      <button class="calc-btn" data-action="equals" style="background:#2b65f6;color:#fff;">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notepad -->
+<div id="win-notepad" class="window minimized header-visible" style="display:none; z-index:500;">
+  <div class="win-header" onmousedown="DragSystem.startWinDrag(event,'notepad')">
+    <div class="win-title"><i class="fas fa-sticky-note" style="margin-right:8px;"></i>Notepad</div>
+    <div class="win-controls"><div class="win-btn btn-min" onclick="minimizeWindow('notepad')"></div><div class="win-btn btn-close" onclick="closeNotepad()"></div></div>
+  </div>
+  <div class="win-body" style="background:#1a1a1a;display:flex;flex-direction:column;padding:15px;">
+    <textarea id="notepad-text" style="width:100%;height:100%;background:#0d0d0d;color:#e0e0e0;border:1px solid #333;border-radius:8px;padding:15px;font-family:'Courier New',monospace;font-size:14px;resize:none;outline:none;line-height:1.6;flex:1;" placeholder="Start typing..."></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 5px 0 5px;color:#666;font-size:12px;border-top:1px solid #222;margin-top:10px;">
+      <span id="notepad-wordcount">Words: 0</span>
+      <span id="notepad-charcount">Characters: 0</span>
+    </div>
+  </div>
+</div>
+
+<dialog id="mobile-warning" aria-modal="true">
+  <div class="mobile-box">
+    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+    <h2>Device is not fully supported</h2>
+    <p>Double tap anywhere to continue</p>
+  </div>
+</dialog>
+
+<!-- ═══════════ TRIGGERS + BOOT + LOCK ═══════════ -->
+<div id="top-trigger" aria-hidden="true"></div>
+<div id="bottom-trigger" aria-hidden="true"></div>
+
+<section id="boot-layer" aria-label="System Boot Sequence">
+  <div id="boot-content">
+    <h1 class="boot-logo"><i class="fas fa-microchip"></i> Syni-OS</h1>
+    <p class="boot-sub">Operating System</p>
+    <button id="boot-btn" onclick="startBootSequence()" tabindex="1">Enter Syni</button>
+    <div class="boot__hint">Click ENTER or click the button to start</div>
+  </div>
+</section>
+
+<main id="lock-screen" style="display:none;flex-direction:column;justify-content:center;align-items:center;">
+  <video id="lock-video" autoplay loop muted playsinline></video>
+  <img id="lock-img" alt="">
+  <div id="lock-ui">
+    <div class="l-day" id="lock-day-large">MONDAY</div>
+    <div class="l-date" id="lock-date">18 MAY, 2026.</div>
+    <div class="l-time" id="lock-time">- 16:15 -</div>
+    <div class="unlock-hint">▼ CLICK ANYWHERE TO UNLOCK ▼</div>
+  </div>
+</main>
+
+<video id="bg-video" loop muted playsinline></video>
+<img id="bg-img" alt="">
+<canvas id="snow-fx"></canvas>
+
+<header id="hud-top"><div class="hud-day" id="lbl-day">FRIDAY</div></header>
+
+<div id="drag-proxy" aria-hidden="true">
+  <div id="folder-badge" class="hidden-badge">2</div>
+  <img id="proxy-img" src="" alt="Dragging">
+</div>
+
+<!-- ═══════════ DESKTOP LAYER ═══════════ -->
+<nav id="dock-container" aria-label="System Taskbar"></nav>
+<section id="windows-layer" aria-live="assertive"></section>
+
+<!-- ═══════════ RIGHT SIDEBAR ═══════════ -->
+<aside id="right-sidebar">
+  <div class="sidebar__section">
+    <div class="sidebar__title">Recent</div>
+    <div class="sidebar__card" onclick="launchLastPlayed()">
+      <img id="last-game-icon" src="https://cdn.jsdelivr.net/gh/taskmaster773/2wafawwfa@main/Screenshot%202026-08-06%20224937.png" alt="">
+      <div class="sidebar__info"><strong id="last-game-name">Continue Playing</strong><small>Jump back in</small></div>
+      <i class="fas fa-play play-overlay"></i>
+    </div>
+  </div>
+  <div class="sidebar__section">
+    <div class="sidebar__title">Now Playing</div>
+    <div class="sidebar__card" onclick="resumeSpotify()">
+      <img id="spotify-album-art" src="https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg" alt="">
+      <div class="sidebar__info"><strong id="spotify-track-name">Spotify</strong><small>Music</small></div>
+      <i class="fas fa-music play-overlay"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════ LEGAL MODAL ═══════════ -->
+<div id="legal-modal">
+  <div style="background:#111;border:1px solid #333;border-radius:16px;max-width:600px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.9);">
+    <div style="padding:20px 25px 15px 25px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:#c62828;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">⚖️</div>
+        <div>
+          <div style="color:#fff;font-size:18px;font-weight:700;font-family:'Rajdhani',sans-serif;">Legal Notice & Disclaimer</div>
+          <div style="color:#888;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Terms of Service</div>
+        </div>
+      </div>
+      <div style="color:#555;font-size:12px;">v3.0.1</div>
+    </div>
+    <div id="legal-scroll" style="flex:1;overflow-y:auto;padding:20px 25px;min-height:200px;max-height:400px;scrollbar-width:thin;scrollbar-color:#444 #0d0d0d;">
+      <div style="color:#aaa;font-size:14px;line-height:1.8;font-family:'Segoe UI',sans-serif;">
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;font-size:16px;">⚠️ PLEASE READ CAREFULLY BEFORE PROCEEDING</p>
+        <p style="margin-bottom:15px;color:#ddd;">By using this application, you agree to the following terms and conditions. This is a legally binding agreement between you and Syni Softwares.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">🔒 INTELLECTUAL PROPERTY &amp; COPYRIGHT</p>
+        <p style="margin-bottom:15px;color:#ccc;">All code, design, and content within this application (the "Software") is the exclusive property of Syni Softwares and is protected by international copyright laws. You are strictly prohibited from copying, modifying, distributing, creating derivative works, or removing copyright notices.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">⚖️ LEGAL ACTION &amp; ENFORCEMENT</p>
+        <p style="margin-bottom:15px;color:#ccc;">Any unauthorized use will result in immediate legal action, including civil litigation, injunctive relief, and criminal prosecution where applicable.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">🛡️ DISCLAIMER OF LIABILITY</p>
+        <p style="margin-bottom:15px;color:#ccc;">This Software is provided "as is" without warranties of any kind.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">📱 THIRD-PARTY CONTENT</p>
+        <p style="margin-bottom:15px;color:#ccc;">Syni Softwares does not host, store, or distribute any third-party content. All third-party content is embedded via iFrames from their respective providers.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">🔐 PRIVACY &amp; DATA</p>
+        <p style="margin-bottom:15px;color:#ccc;">We do not collect, store, or share any personal data.</p>
+        <p style="margin-bottom:15px;color:#ff6b6b;font-weight:bold;">📅 CHANGES TO TERMS</p>
+        <p style="margin-bottom:15px;color:#ccc;">Syni Softwares reserves the right to update these terms at any time without prior notice.</p>
+        <p style="margin-bottom:15px;color:#888;font-size:12px;border-top:1px solid #333;padding-top:15px;text-align:center;">© 2025-2026 Syni Softwares. All rights reserved.<br>Syni-OS v3.0.1</p>
+      </div>
+    </div>
+    <div style="padding:15px 25px;border-top:1px solid #333;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#0a0a0a;border-radius:0 0 16px 16px;">
+      <div style="color:#555;font-size:11px;"><span id="legal-scroll-status" style="color:#ff6b6b;">⬇️ Scroll to bottom to agree</span></div>
+      <button id="legal-agree-btn" onclick="acceptLegal()" disabled style="background:#333;border:none;border-radius:8px;color:#666;padding:12px 30px;cursor:not-allowed;font-weight:700;font-size:16px;font-family:'Rajdhani',sans-serif;transition:all .3s ease;opacity:.5;">Agree &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="update-modal" class="modal__backdrop" aria-modal="true">
+  <article class="modal__content">
+    <h2 class="modal__header">UPDATE LOG v3.0</h2>
+    <ul class="modal__list">
+      <li>Added Right Sidebar for quick game &amp; music access.</li>
+      <li>Dynamic image-based lock screen days.</li>
+      <li>Smooth slide-out lock screen animations.</li>
+      <li>Fixed desktop folder expansion physics.</li>
+      <li>Wallpaper engine now fully supports PNG, MOV, and MP4.</li>
+      <li>Added Taskbar Pin/Unpin capability for all apps.</li>
+    </ul>
+    <button class="modal__btn" onclick="document.getElementById('update-modal').style.display='none'">Dismiss</button>
+  </article>
+</dialog>
+
+<!-- ═══════════ START MENU + APP DRAWER ═══════════ -->
+<aside id="start-menu" class="os-menu" aria-label="Start Menu">
+  <div class="start-search-bar"><i class="fas fa-search search-icon"></i><input type="text" id="start-search-input" placeholder="..."></div>
+  <header class="pinned-header"><h3>Pinned</h3></header>
+  <div class="pinned-grid" id="pinned-grid"></div>
+  <footer class="start-footer">
+    <div class="user-profile"><div class="user-avatar"><i class="fas fa-user"></i></div><span class="user-role">Administrator</span></div>
+    <i class="fas fa-power-off power-btn" role="button" tabindex="0" onclick="refreshSystem()" aria-label="Restart OS"></i>
+  </footer>
+</aside>
+
+<dialog id="app-drawer" aria-label="All Applications">
+  <div class="drawer-search-wrap"><i class="fas fa-search search-icon"></i><input type="text" class="drawer-search-input" placeholder="Search apps..." onkeyup="filterDrawer(this.value)"></div>
+  <div class="drawer-grid" id="drawer-grid"></div>
+</dialog>
+
+<!-- ═══════════ CONTEXT MENUS ═══════════ -->
+<menu id="app-context-menu" class="os-context-menu" role="menu"></menu>
+<menu id="drawer-ctx-menu" class="os-context-menu" role="menu">
+  <li class="ctx-item" id="ctx-pin-app" role="menuitem" tabindex="0"><i class="fas fa-thumbtack fa-fw"></i> Pin to Taskbar</li>
+</menu>
+<menu id="dock-ctx-menu" class="os-context-menu" role="menu">
+  <li class="ctx-item" id="ctx-unpin-app" role="menuitem" tabindex="0"><i class="fas fa-unlink fa-fw"></i> Unpin from Taskbar</li>
+</menu>
+<menu id="desktop-context-menu" class="os-context-menu" role="menu">
+  <li class="ctx-item" role="menuitem" tabindex="0" onclick="wpOpenMenu();document.getElementById('desktop-context-menu').style.display='none';"><i class="fas fa-image fa-fw"></i> Change Wallpaper</li>
+  <li class="ctx-item" role="menuitem" tabindex="0" onclick="tbOpenMenu();document.getElementById('desktop-context-menu').style.display='none';"><i class="fas fa-window-maximize fa-fw"></i> Taskbar Appearance</li>
+  <li class="ctx-separator" role="separator"></li>
+  <li class="ctx-row" role="none">
+    <button class="ctx-btn" onclick="toggleDesktopSize(true)" title="Large Icons"><i class="fas fa-expand-arrows-alt"></i></button>
+    <button class="ctx-btn" onclick="toggleDesktopSize(false)" title="Default Size"><i class="fas fa-compress-arrows-alt"></i></button>
+  </li>
+  <li class="ctx-separator" role="separator"></li>
+  <li class="ctx-item" role="menuitem" tabindex="0" onclick="refreshSystem();document.getElementById('desktop-context-menu').style.display='none';"><i class="fas fa-sync fa-fw"></i> Refresh System</li>
+</menu>
+
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ═══════════ CIRI AI ═══════════ -->
+<div id="ciri-trigger" aria-hidden="true"></div>
+<div id="ciri-backdrop" aria-hidden="true"></div>
+<aside id="ciri-window" aria-label="Ciri AI Assistant">
+  <div id="ciri-header">
+    <div id="ciri-dot" class="ready"></div>
+    <span id="ciri-label">CIRI</span>
+    <input id="ciri-input" type="text" placeholder="Ask Ciri…" autocomplete="off" spellcheck="false">
+    <button id="ciri-attach-btn" title="Attach image (or paste / drag)"><i class="fas fa-paperclip"></i></button>
+    <button id="ciri-clear" title="Clear chat"><i class="fas fa-trash-alt"></i></button>
+    <span id="ciri-hint">Esc to close</span>
+  </div>
+  <div id="ciri-attachments"></div>
+  <input type="file" id="ciri-file-input" accept="image/*" multiple style="display:none;">
+  <div id="ciri-history" aria-live="polite"></div>
+  <div id="ciri-thinking">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <span>Ciri is thinking…</span>
+  </div>
+  <div id="ciri-key-prompt" class="hidden">
+    <p>Enter your Groq API key to enable AI. It stays in your browser.</p>
+    <input id="ciri-key-input" type="password" placeholder="gsk_…">
+    <button id="ciri-key-save">Save &amp; Continue</button>
+  </div>
+</aside>
+
+<!-- ═══════════ CHAT ═══════════ -->
+<div id="chat-window" aria-label="Chat">
+  <div class="chat-header" id="chat-drag-handle">
+    <div class="chat-header-left"><span class="chat-dot"></span><span class="chat-title">CHAT</span></div>
+    <div class="chat-header-right">
+      <span class="chat-status" id="chat-status">connecting…</span>
+      <button class="chat-nick-change" id="chat-nick-change" onclick="chatChangeNick()" title="Change nickname"><i class="fas fa-user-edit"></i></button>
+      <button class="chat-owner-toggle" id="chat-owner-toggle" onclick="chatToggleOwner()" title="Toggle Owner Mode"><i class="fas fa-crown"></i></button>
+      <button class="chat-clear-all" id="chat-clear-all" onclick="chatClearAll()" title="Clear all messages"><i class="fas fa-trash-alt"></i></button>
+      <button class="chat-close" onclick="toggleChat()" title="Close"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+  <div class="chat-room-tabs" id="chat-room-tabs">
+    <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
+    <button class="chat-room-tab" data-room="bugs"><i class="fas fa-bug"></i> Bugs<span class="chat-tab-badge" data-badge="bugs"></span></button>
+    <button class="chat-room-tab" data-room="reviews"><i class="fas fa-star"></i> Reviews<span class="chat-tab-badge" data-badge="reviews"></span></button>
+  </div>
+  <div class="chat-nick-row" id="chat-nick-row" style="display:none;">
+    <input type="text" id="chat-nick-input" placeholder="Pick a nickname…" maxlength="20">
+    <button id="chat-nick-btn" onclick="chatSetNick()">Join</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"><div class="chat-empty">No messages yet. Say hi!</div></div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Type a message…" maxlength="500" autocomplete="off">
+    <button id="chat-send" onclick="chatSend()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<!-- ═══════════ TIMER WIDGET ═══════════ -->
+<div id="timer-widget" aria-label="Timer">
+  <div class="tm-header">
+    <span class="tm-title"><i class="fas fa-stopwatch" style="margin-right:6px;"></i>Timer</span>
+    <button class="tm-close" id="tm-close" title="Close"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="tm-inputs">
+    <div class="tm-field"><input type="number" id="tm-h" min="0" max="99" value="0" placeholder="0"><label>Hours</label></div>
+    <span class="tm-colon">:</span>
+    <div class="tm-field"><input type="number" id="tm-m" min="0" max="59" value="0" placeholder="0"><label>Min</label></div>
+    <span class="tm-colon">:</span>
+    <div class="tm-field"><input type="number" id="tm-s" min="0" max="59" value="0" placeholder="0"><label>Sec</label></div>
+  </div>
+  <div class="tm-display" id="tm-display">00:00:00</div>
+  <div class="tm-controls">
+    <button class="tm-btn primary" id="tm-start"><i class="fas fa-play"></i> Start</button>
+    <button class="tm-btn danger" id="tm-reset"><i class="fas fa-rotate-left"></i> Reset</button>
+  </div>
+</div>
+
+<!-- ═══════════ MEDIA PLAYER ═══════════ -->
+<video id="screen-video" autoplay playsinline class="hidden-media"></video>
+<canvas id="screen-canvas" class="hidden-media"></canvas>
+
+<button id="restore-btn" title="Restore Player" aria-label="Restore Media Player">
+  <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+</button>
+
+<aside id="cine-noti" aria-label="Now Playing">
+  <header class="window-actions">
+    <button class="action-btn" id="minimize-noti-btn" title="Minimize"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+    <button class="action-btn" id="close-noti-btn" title="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+  </header>
+  <div class="player-main">
+    <img class="album-art" id="noti-album-art" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop" alt="Album Art">
+    <div class="track-info">
+      <strong class="title" id="noti-title">System Audio</strong>
+      <span class="artist" id="noti-artist">Now Playing</span>
+      <canvas id="visualizer" aria-hidden="true"></canvas>
+    </div>
+  </div>
+  <div class="time-wrapper">
+    <span id="current-time">0:00</span>
+    <div class="progress-hit-area" id="progress-hit-area" role="slider" tabindex="0"><div class="progress-bg"><div class="progress-fill" id="progress-fill"></div></div></div>
+    <span id="total-time">LIVE</span>
+  </div>
+  <nav class="controls" aria-label="Media Controls">
+    <button class="ctrl-btn" id="skip-back" title="Back 15s"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C20.48 10.9 16.85 8 12.5 8z"/></svg></button>
+    <button class="ctrl-btn play-pause-btn" id="play-pause"><svg id="icon-play" class="hidden-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" class="visible-svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+    <button class="ctrl-btn" id="skip-forward" title="Skip 15s"><svg viewBox="0 0 24 24"><path d="M11.5 8c-4.35 0-7.98 2.9-9.98 7.22l2.37.78c1.05-3.19 4.06-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6c-1.84-1.61-4.24-2.6-6.9-2.6z"/></svg></button>
+  </nav>
+</aside>
+
+<!-- ═══════════ SCRIPTS (loaded in order) ═══════════ -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/clock.js"></script>
+<script src="js/wallpaper.js"></script>
+<script src="js/taskbar.js"></script>
+<script src="js/dock.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/windows.js"></script>
+<script src="js/boot.js"></script>
+<script src="js/apps/calculator.js"></script>
+<script src="js/apps/notepad.js"></script>
+<script src="js/apps/wordcount.js"></script>
+<script src="js/apps/grammar.js"></script>
+<script src="js/apps/timer.js"></script>
+<script src="js/apps/spotify.js"></script>
+<script src="js/apps/settings.js"></script>
+<script src="js/apps/proxy-browser.js"></script>
+<script src="js/apps/browser.js"></script>
+<script src="js/apps/appstore.js"></script>
+<script src="js/media-player.js"></script>
+<script src="js/fps-snow.js"></script>
+<script src="js/ciri.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
