@@ -11,7 +11,7 @@ var timerState = {
   endTime: null
 };
 
-var TM_CIRCUMFERENCE = 2 * Math.PI * 56;  // r=56
+var TM_CIRCUMFERENCE = 2 * Math.PI * 42;
 
 /* ---------- Open / close ---------- */
 
