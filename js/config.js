@@ -5,6 +5,11 @@
 window.SYNI_CONFIG = {
   buildVersion: '3.0.1',
 
+  versionCheckUrl: 'version.json',        // relative to your site root
+  versionCheckOnBoot: true,
+  versionCheckInterval: 1000 * 60 * 30,
+
+
   // Firebase (chat)
   firebase: {
     apiKey: "AIzaSyDEjaXq6gk68myZGOC8IriIUVebTuyZfhc",
