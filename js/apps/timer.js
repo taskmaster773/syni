@@ -36,7 +36,6 @@ function tmFormat(sec){
   var h = Math.floor(sec / 3600);
   var m = Math.floor((sec % 3600) / 60);
   var s = sec % 60;
-  // Always show H:MM:SS to match the reference layout
   return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
@@ -94,7 +93,6 @@ function tmUpdateDisplay(){
 
   d.textContent = tmFormat(timerState.remaining);
 
-  // Ring progress: 0 → nothing drawn, 1 → full
   var pct = timerState.total > 0 ? (timerState.remaining / timerState.total) : 0;
   ring.style.strokeDasharray  = TM_CIRCUMFERENCE;
   ring.style.strokeDashoffset = TM_CIRCUMFERENCE * (1 - pct);
@@ -112,6 +110,7 @@ function tmUpdateDisplay(){
 
 function tmStart(){
   var w = document.getElementById('timer-widget');
+
   if(timerState.running){
     clearInterval(timerState.interval);
     timerState.running = false;
@@ -123,6 +122,7 @@ function tmStart(){
     tmUpdateDisplay();
     return;
   }
+
   if(timerState.remaining > 0 && !timerState.finished){
     timerState.running = true;
     timerState.endTime = Date.now() + timerState.remaining * 1000;
@@ -135,70 +135,25 @@ function tmStart(){
     timerState.interval = setInterval(tmTick, 250);
     return;
   }
+
   var total = tmReadInputs();
   if(total <= 0) return;
+
   timerState.total = total;
   timerState.remaining = total;
   timerState.finished = false;
   timerState.running = true;
   timerState.endTime = Date.now() + total * 1000;
+
   w.classList.add('running');
   w.classList.remove('paused');
   w.classList.remove('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-pause';
   tmUpdateSubLabel();
   tmUpdateDisplay();
+
   clearInterval(timerState.interval);
   timerState.interval = setInterval(tmTick, 250);
-}
-
-function tmFinish(){
-  clearInterval(timerState.interval);
-  timerState.running = false;
-  timerState.finished = true;
-  timerState.remaining = 0;
-  timerState.endTime = null;
-  var widget = document.getElementById('timer-widget');
-  widget.classList.remove('running');
-  widget.classList.remove('paused');
-  widget.classList.add('done');
-  document.getElementById('tm-toggle-icon').className = 'fas fa-play';
-  tmUpdateSubLabel();
-  tmUpdateDisplay();
-  try {
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if(AC){
-      var ctx = new AC();
-      var osc = ctx.createOscillator();
-      var gain = ctx.createGain();
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      osc.connect(gain); gain.connect(ctx.destination);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-      osc.start(); osc.stop(ctx.currentTime + 0.8);
-    }
-  } catch(e){}
-  if(typeof showNotification === 'function'){
-    showNotification('⏰ Timer', 'Time is up!');
-  }
-}
-
-function tmReset(){
-  clearInterval(timerState.interval);
-  timerState.running = false;
-  timerState.finished = false;
-  timerState.total = 0;
-  timerState.remaining = 0;
-  timerState.endTime = null;
-  var widget = document.getElementById('timer-widget');
-  widget.classList.remove('running');
-  widget.classList.remove('paused');
-  widget.classList.remove('done');
-  document.getElementById('tm-toggle-icon').className = 'fas fa-play';
-  tmSetInputs(0);
-  tmUpdateSubLabel();
-  tmUpdateDisplay();
 }
 
 function tmTick(){
@@ -223,14 +178,13 @@ function tmFinish(){
 
   var widget = document.getElementById('timer-widget');
   widget.classList.remove('running');
+  widget.classList.remove('paused');
   widget.classList.add('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-play';
-  document.getElementById('tm-toggle').title = 'Start';
 
   tmUpdateSubLabel();
   tmUpdateDisplay();
 
-  // Beep
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
     if(AC){
@@ -251,8 +205,6 @@ function tmFinish(){
   }
 }
 
-/* ---------- Cancel / reset ---------- */
-
 function tmReset(){
   clearInterval(timerState.interval);
   timerState.running = false;
@@ -263,9 +215,9 @@ function tmReset(){
 
   var widget = document.getElementById('timer-widget');
   widget.classList.remove('running');
+  widget.classList.remove('paused');
   widget.classList.remove('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-play';
-  document.getElementById('tm-toggle').title = 'Start';
 
   tmSetInputs(0);
   tmUpdateSubLabel();
@@ -293,64 +245,40 @@ function tmReset(){
     });
   });
 
+  // Drag — anywhere on the widget
   var w = document.getElementById('timer-widget');
   if(w){
-    var header = w.querySelector('.tm-header');
-    if(header){
-      var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
-      header.addEventListener('mousedown', function(e){
-        dragging = true;
-        sx = e.clientX; sy = e.clientY;
-        var r = w.getBoundingClientRect();
-        ox = r.left; oy = r.top;
-        w.style.left = ox + 'px';
-        w.style.top  = oy + 'px';
-        w.style.right = 'auto';
-        e.preventDefault();
-      });
-      window.addEventListener('mousemove', function(e){
-        if(!dragging) return;
-        var nx = Math.max(0, Math.min(window.innerWidth  - w.offsetWidth,  ox + e.clientX - sx));
-        var ny = Math.max(0, Math.min(window.innerHeight - w.offsetHeight, oy + e.clientY - sy));
-        w.style.left = nx + 'px';
-        w.style.top  = ny + 'px';
-      });
-      window.addEventListener('mouseup', function(){ dragging = false; });
-    }
+    var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
+    w.addEventListener('mousedown', function(e){
+      if(e.target.closest('button') || e.target.closest('input')) return;
+      dragging = true;
+      sx = e.clientX; sy = e.clientY;
+      var r = w.getBoundingClientRect();
+      ox = r.left; oy = r.top;
+      w.style.left = ox + 'px';
+      w.style.top  = oy + 'px';
+      w.style.right = 'auto';
+      w.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e){
+      if(!dragging) return;
+      var nx = Math.max(0, Math.min(window.innerWidth  - w.offsetWidth,  ox + e.clientX - sx));
+      var ny = Math.max(0, Math.min(window.innerHeight - w.offsetHeight, oy + e.clientY - sy));
+      w.style.left = nx + 'px';
+      w.style.top  = ny + 'px';
+    });
+
+    window.addEventListener('mouseup', function(){
+      if(dragging){
+        dragging = false;
+        w.style.cursor = '';
+      }
+    });
   }
 
-  tmUpdateSubLabel();
-  tmUpdateDisplay();
-})();
-
-  // Drag
-  var w = document.getElementById('timer-widget');
-  if(w){
-    var header = w.querySelector('.tm-header');
-    if(header){
-      var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
-      header.addEventListener('mousedown', function(e){
-        dragging = true;
-        sx = e.clientX; sy = e.clientY;
-        var r = w.getBoundingClientRect();
-        ox = r.left; oy = r.top;
-        w.style.left = ox + 'px';
-        w.style.top  = oy + 'px';
-        w.style.right = 'auto';
-        e.preventDefault();
-      });
-      window.addEventListener('mousemove', function(e){
-        if(!dragging) return;
-        var nx = Math.max(0, Math.min(window.innerWidth  - w.offsetWidth,  ox + e.clientX - sx));
-        var ny = Math.max(0, Math.min(window.innerHeight - w.offsetHeight, oy + e.clientY - sy));
-        w.style.left = nx + 'px';
-        w.style.top  = ny + 'px';
-      });
-      window.addEventListener('mouseup', function(){ dragging = false; });
-    }
-  }
-
-  // Initial render — starts at 0:00:00 with an empty ring
   tmUpdateSubLabel();
   tmUpdateDisplay();
 })();
