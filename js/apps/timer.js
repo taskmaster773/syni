@@ -1,5 +1,5 @@
 /* ============================================================
-   Floating Timer Widget — modern card
+   Floating Timer Widget
    ============================================================ */
 
 var timerState = {
@@ -11,7 +11,7 @@ var timerState = {
   endTime: null
 };
 
-var TM_CIRCUMFERENCE = 2 * Math.PI * 48;  // r=48
+var TM_CIRCUMFERENCE = 2 * Math.PI * 56;  // r=56
 
 /* ---------- Open / close ---------- */
 
@@ -23,8 +23,8 @@ window.toggleTimerWidget = function(){
   } else {
     w.classList.add('show');
     if(!timerState.running && timerState.total === 0){
-      var m = document.getElementById('tm-m');
-      if(m) m.focus();
+      var h = document.getElementById('tm-h');
+      if(h) h.focus();
     }
   }
 };
@@ -36,12 +36,8 @@ function tmFormat(sec){
   var h = Math.floor(sec / 3600);
   var m = Math.floor((sec % 3600) / 60);
   var s = sec % 60;
-  if(h > 0){
-    return String(h).padStart(2,'0') + ':' +
-           String(m).padStart(2,'0') + ':' +
-           String(s).padStart(2,'0');
-  }
-  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  // Always show H:MM:SS to match the reference layout
+  return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
 function tmFormatClock(date){
@@ -77,7 +73,7 @@ function tmUpdateSubLabel(){
   if(!el) return;
   var total = timerState.total;
   if(total === 0){
-    el.textContent = 'Set duration';
+    el.textContent = 'Set a duration';
     return;
   }
   var h = Math.floor(total / 3600);
@@ -98,38 +94,43 @@ function tmUpdateDisplay(){
 
   d.textContent = tmFormat(timerState.remaining);
 
+  // Ring progress: 0 → nothing drawn, 1 → full
   var pct = timerState.total > 0 ? (timerState.remaining / timerState.total) : 0;
   ring.style.strokeDasharray  = TM_CIRCUMFERENCE;
   ring.style.strokeDashoffset = TM_CIRCUMFERENCE * (1 - pct);
 
   if(timerState.running && timerState.endTime){
-    endEl.textContent = tmFormatClock(new Date(timerState.endTime));
+    endEl.textContent = 'Ends ' + tmFormatClock(new Date(timerState.endTime));
   } else if(timerState.total > 0){
     endEl.textContent = 'Paused';
   } else {
-    endEl.textContent = '—';
+    endEl.textContent = 'Ready';
   }
 }
 
 /* ---------- Start / pause / resume ---------- */
 
 function tmStart(){
+  // If running → pause
   if(timerState.running){
     clearInterval(timerState.interval);
     timerState.running = false;
     timerState.endTime = null;
     document.getElementById('timer-widget').classList.remove('running');
     document.getElementById('tm-toggle-icon').className = 'fas fa-play';
+    document.getElementById('tm-toggle').title = 'Resume';
     tmUpdateSubLabel();
     tmUpdateDisplay();
     return;
   }
 
+  // If we have remaining time paused → resume
   if(timerState.remaining > 0 && !timerState.finished){
     timerState.running = true;
     timerState.endTime = Date.now() + timerState.remaining * 1000;
     document.getElementById('timer-widget').classList.add('running');
     document.getElementById('tm-toggle-icon').className = 'fas fa-pause';
+    document.getElementById('tm-toggle').title = 'Pause';
     tmUpdateSubLabel();
     tmUpdateDisplay();
     clearInterval(timerState.interval);
@@ -137,6 +138,7 @@ function tmStart(){
     return;
   }
 
+  // Fresh start from inputs
   var total = tmReadInputs();
   if(total <= 0) return;
 
@@ -149,6 +151,7 @@ function tmStart(){
   document.getElementById('timer-widget').classList.add('running');
   document.getElementById('timer-widget').classList.remove('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-pause';
+  document.getElementById('tm-toggle').title = 'Pause';
 
   tmUpdateSubLabel();
   tmUpdateDisplay();
@@ -181,10 +184,12 @@ function tmFinish(){
   widget.classList.remove('running');
   widget.classList.add('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-play';
+  document.getElementById('tm-toggle').title = 'Start';
 
   tmUpdateSubLabel();
   tmUpdateDisplay();
 
+  // Beep
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
     if(AC){
@@ -205,6 +210,8 @@ function tmFinish(){
   }
 }
 
+/* ---------- Cancel / reset ---------- */
+
 function tmReset(){
   clearInterval(timerState.interval);
   timerState.running = false;
@@ -217,9 +224,9 @@ function tmReset(){
   widget.classList.remove('running');
   widget.classList.remove('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-play';
+  document.getElementById('tm-toggle').title = 'Start';
 
   tmSetInputs(0);
-  document.getElementById('tm-m').value = 5;
   tmUpdateSubLabel();
   tmUpdateDisplay();
 }
@@ -245,6 +252,7 @@ function tmReset(){
     });
   });
 
+  // Drag
   var w = document.getElementById('timer-widget');
   if(w){
     var header = w.querySelector('.tm-header');
@@ -271,6 +279,7 @@ function tmReset(){
     }
   }
 
+  // Initial render — starts at 0:00:00 with an empty ring
   tmUpdateSubLabel();
   tmUpdateDisplay();
 })();
