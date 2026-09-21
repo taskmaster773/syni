@@ -417,16 +417,11 @@
 
 <!-- ═══════════ TIMER WIDGET ═══════════ -->
 <div id="timer-widget" aria-label="Timer">
-  <div class="tm-header">
-    <span class="tm-label">Timer</span>
-    <span class="tm-sub" id="tm-sub">Set a duration</span>
-  </div>
-
-  <div class="tm-body">
+  <div class="tm-left">
     <div class="tm-ring-wrap">
-      <svg class="tm-ring" width="130" height="130" viewBox="0 0 130 130">
-        <circle class="tm-track"    cx="65" cy="65" r="56"></circle>
-        <circle class="tm-progress" cx="65" cy="65" r="56" id="tm-ring-progress"></circle>
+      <svg class="tm-ring" width="100" height="100" viewBox="0 0 100 100">
+        <circle class="tm-track"    cx="50" cy="50" r="42"></circle>
+        <circle class="tm-progress" cx="50" cy="50" r="42" id="tm-ring-progress"></circle>
       </svg>
       <div class="tm-time">
         <div class="tm-time-main" id="tm-display">0:00:00</div>
@@ -435,21 +430,28 @@
     </div>
   </div>
 
-  <div class="tm-controls">
-    <button class="tm-btn cancel" id="tm-cancel" title="Cancel">
-      <i class="fas fa-times"></i>
-    </button>
-    <button class="tm-btn toggle" id="tm-toggle" title="Start">
-      <i class="fas fa-play" id="tm-toggle-icon"></i>
-    </button>
-  </div>
+  <div class="tm-right">
+    <div class="tm-header">
+      <span class="tm-label">Timer</span>
+      <span class="tm-sub" id="tm-sub">Set a duration</span>
+    </div>
 
-  <div class="tm-inputs">
-    <div class="tm-field"><input type="number" id="tm-h" min="0" max="99" value="0"><label>Hr</label></div>
-    <span class="tm-colon">:</span>
-    <div class="tm-field"><input type="number" id="tm-m" min="0" max="59" value="0"><label>Min</label></div>
-    <span class="tm-colon">:</span>
-    <div class="tm-field"><input type="number" id="tm-s" min="0" max="59" value="0"><label>Sec</label></div>
+    <div class="tm-controls">
+      <button class="tm-btn cancel" id="tm-cancel" title="Cancel">
+        <i class="fas fa-times"></i>
+      </button>
+      <button class="tm-btn toggle" id="tm-toggle" title="Start">
+        <i class="fas fa-play" id="tm-toggle-icon"></i>
+      </button>
+    </div>
+
+    <div class="tm-inputs">
+      <div class="tm-field"><input type="number" id="tm-h" min="0" max="99" value="0"><label>Hr</label></div>
+      <span class="tm-colon">:</span>
+      <div class="tm-field"><input type="number" id="tm-m" min="0" max="59" value="0"><label>Min</label></div>
+      <span class="tm-colon">:</span>
+      <div class="tm-field"><input type="number" id="tm-s" min="0" max="59" value="0"><label>Sec</label></div>
+    </div>
   </div>
 </div>
 
