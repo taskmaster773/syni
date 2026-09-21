@@ -295,37 +295,28 @@ function tmReset(){
 
   var w = document.getElementById('timer-widget');
   if(w){
-    var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
-
-    w.addEventListener('mousedown', function(e){
-      // Don't drag if clicking a button or input
-      if(e.target.closest('button') || e.target.closest('input')) return;
-
-      dragging = true;
-      sx = e.clientX; sy = e.clientY;
-      var r = w.getBoundingClientRect();
-      ox = r.left; oy = r.top;
-      w.style.left = ox + 'px';
-      w.style.top  = oy + 'px';
-      w.style.right = 'auto';
-      w.style.cursor = 'grabbing';
-      e.preventDefault();
-    });
-
-    window.addEventListener('mousemove', function(e){
-      if(!dragging) return;
-      var nx = Math.max(0, Math.min(window.innerWidth  - w.offsetWidth,  ox + e.clientX - sx));
-      var ny = Math.max(0, Math.min(window.innerHeight - w.offsetHeight, oy + e.clientY - sy));
-      w.style.left = nx + 'px';
-      w.style.top  = ny + 'px';
-    });
-
-    window.addEventListener('mouseup', function(){
-      if(dragging){
-        dragging = false;
-        w.style.cursor = '';
-      }
-    });
+    var header = w.querySelector('.tm-header');
+    if(header){
+      var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      header.addEventListener('mousedown', function(e){
+        dragging = true;
+        sx = e.clientX; sy = e.clientY;
+        var r = w.getBoundingClientRect();
+        ox = r.left; oy = r.top;
+        w.style.left = ox + 'px';
+        w.style.top  = oy + 'px';
+        w.style.right = 'auto';
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', function(e){
+        if(!dragging) return;
+        var nx = Math.max(0, Math.min(window.innerWidth  - w.offsetWidth,  ox + e.clientX - sx));
+        var ny = Math.max(0, Math.min(window.innerHeight - w.offsetHeight, oy + e.clientY - sy));
+        w.style.left = nx + 'px';
+        w.style.top  = ny + 'px';
+      });
+      window.addEventListener('mouseup', function(){ dragging = false; });
+    }
   }
 
   tmUpdateSubLabel();
