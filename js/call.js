@@ -8,10 +8,16 @@ var localStream = null;
 
 function initPeer(){
   if(callPeer) return;
-  callPeer = new Peer(chatNickname || ('user_' + Math.random().toString(36).slice(2,8)));
+
+  // Sanitize: PeerJS only allows a-z, A-Z, 0-9, -, _
+  var baseId = (chatNickname || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+  if(!baseId) baseId = 'user_' + Math.random().toString(36).slice(2,8);
+
+  callPeer = new Peer(baseId);
 
   callPeer.on('open', function(id){
     console.log('[Calls] My peer ID:', id);
+    showNotification('📞 Ready', 'Calls enabled. Your ID is: ' + id);
   });
 
   callPeer.on('error', function(err){
@@ -19,16 +25,10 @@ function initPeer(){
   });
 
   callPeer.on('call', function(call){
-    if(activeCall){
-      call.close();
-      return;
-    }
+    if(activeCall){ call.close(); return; }
     var accept = confirm('📞 Incoming call from ' + call.peer + '.\n\nAccept?');
-    if(accept){
-      answerCall(call);
-    } else {
-      call.close();
-    }
+    if(accept) answerCall(call);
+    else call.close();
   });
 }
 
