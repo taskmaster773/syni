@@ -300,4 +300,5 @@
 #timer-widget .tm-colon{
   font-size:19px;font-weight:700;color:#555;padding-bottom:16px;
 }
-#timer-widget.running .tm-inputs{display:none;}
+#timer-widget.running .tm-inputs,
+#timer-widget.paused .tm-inputs{display:none;}
