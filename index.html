@@ -394,11 +394,13 @@
     <div class="chat-header-left"><span class="chat-dot"></span><span class="chat-title">CHAT</span></div>
     <div class="chat-header-right">
       <span class="chat-status" id="chat-status">connecting…</span>
+      <button class="chat-nick-change" onclick="startVoiceCall()" title="Voice call"><i class="fas fa-phone"></i></button>
+      <button class="chat-nick-change" onclick="startVideoCall()" title="Video call"><i class="fas fa-video"></i></button>
       <button class="chat-nick-change" id="chat-nick-change" onclick="chatChangeNick()" title="Change nickname"><i class="fas fa-user-edit"></i></button>
       <button class="chat-owner-toggle" id="chat-owner-toggle" onclick="chatToggleOwner()" title="Toggle Owner Mode"><i class="fas fa-crown"></i></button>
       <button class="chat-clear-all" id="chat-clear-all" onclick="chatClearAll()" title="Clear all messages"><i class="fas fa-trash-alt"></i></button>
       <button class="chat-close" onclick="toggleChat()" title="Close"><i class="fas fa-times"></i></button>
-    </div>
+</div>
   </div>
   <div class="chat-room-tabs" id="chat-room-tabs">
     <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
