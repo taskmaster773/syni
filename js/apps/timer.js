@@ -111,53 +111,94 @@ function tmUpdateDisplay(){
 /* ---------- Start / pause / resume ---------- */
 
 function tmStart(){
-  // If running → pause
+  var w = document.getElementById('timer-widget');
   if(timerState.running){
     clearInterval(timerState.interval);
     timerState.running = false;
     timerState.endTime = null;
-    document.getElementById('timer-widget').classList.remove('running');
+    w.classList.remove('running');
+    w.classList.add('paused');
     document.getElementById('tm-toggle-icon').className = 'fas fa-play';
-    document.getElementById('tm-toggle').title = 'Resume';
     tmUpdateSubLabel();
     tmUpdateDisplay();
     return;
   }
-
-  // If we have remaining time paused → resume
   if(timerState.remaining > 0 && !timerState.finished){
     timerState.running = true;
     timerState.endTime = Date.now() + timerState.remaining * 1000;
-    document.getElementById('timer-widget').classList.add('running');
+    w.classList.add('running');
+    w.classList.remove('paused');
     document.getElementById('tm-toggle-icon').className = 'fas fa-pause';
-    document.getElementById('tm-toggle').title = 'Pause';
     tmUpdateSubLabel();
     tmUpdateDisplay();
     clearInterval(timerState.interval);
     timerState.interval = setInterval(tmTick, 250);
     return;
   }
-
-  // Fresh start from inputs
   var total = tmReadInputs();
   if(total <= 0) return;
-
   timerState.total = total;
   timerState.remaining = total;
   timerState.finished = false;
   timerState.running = true;
   timerState.endTime = Date.now() + total * 1000;
-
-  document.getElementById('timer-widget').classList.add('running');
-  document.getElementById('timer-widget').classList.remove('done');
+  w.classList.add('running');
+  w.classList.remove('paused');
+  w.classList.remove('done');
   document.getElementById('tm-toggle-icon').className = 'fas fa-pause';
-  document.getElementById('tm-toggle').title = 'Pause';
-
   tmUpdateSubLabel();
   tmUpdateDisplay();
-
   clearInterval(timerState.interval);
   timerState.interval = setInterval(tmTick, 250);
+}
+
+function tmFinish(){
+  clearInterval(timerState.interval);
+  timerState.running = false;
+  timerState.finished = true;
+  timerState.remaining = 0;
+  timerState.endTime = null;
+  var widget = document.getElementById('timer-widget');
+  widget.classList.remove('running');
+  widget.classList.remove('paused');
+  widget.classList.add('done');
+  document.getElementById('tm-toggle-icon').className = 'fas fa-play';
+  tmUpdateSubLabel();
+  tmUpdateDisplay();
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(AC){
+      var ctx = new AC();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      osc.connect(gain); gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc.start(); osc.stop(ctx.currentTime + 0.8);
+    }
+  } catch(e){}
+  if(typeof showNotification === 'function'){
+    showNotification('⏰ Timer', 'Time is up!');
+  }
+}
+
+function tmReset(){
+  clearInterval(timerState.interval);
+  timerState.running = false;
+  timerState.finished = false;
+  timerState.total = 0;
+  timerState.remaining = 0;
+  timerState.endTime = null;
+  var widget = document.getElementById('timer-widget');
+  widget.classList.remove('running');
+  widget.classList.remove('paused');
+  widget.classList.remove('done');
+  document.getElementById('tm-toggle-icon').className = 'fas fa-play';
+  tmSetInputs(0);
+  tmUpdateSubLabel();
+  tmUpdateDisplay();
 }
 
 function tmTick(){
