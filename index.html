@@ -405,10 +405,11 @@
 </div>
   </div>
   <div class="chat-room-tabs" id="chat-room-tabs">
-    <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
-    <button class="chat-room-tab" data-room="bugs"><i class="fas fa-bug"></i> Bugs<span class="chat-tab-badge" data-badge="bugs"></span></button>
-    <button class="chat-room-tab" data-room="reviews"><i class="fas fa-star"></i> Reviews<span class="chat-tab-badge" data-badge="reviews"></span></button>
-  </div>
+  <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
+  <button class="chat-room-tab" data-room="bugs"><i class="fas fa-bug"></i> Bugs<span class="chat-tab-badge" data-badge="bugs"></span></button>
+  <button class="chat-room-tab" data-room="reviews"><i class="fas fa-star"></i> Reviews<span class="chat-tab-badge" data-badge="reviews"></span></button>
+  <button class="chat-room-tab chat-room-add" onclick="openRoomCreator()" title="Create or join a room"><i class="fas fa-plus"></i></button>
+</div>
   <div class="chat-nick-row" id="chat-nick-row" style="display:none;">
     <input type="text" id="chat-nick-input" placeholder="Pick a nickname…" maxlength="20">
     <button id="chat-nick-btn" onclick="chatSetNick()">Join</button>
@@ -424,6 +425,68 @@
 
   <div id="user-profile-overlay" class="user-profile-overlay"></div>
 <div id="friends-panel" class="friends-panel"></div>
+
+  <div id="room-creator-overlay" class="room-overlay">
+  <div class="room-modal">
+    <div class="room-modal-header">
+      <h3>Create a Room</h3>
+      <button onclick="closeRoomCreator()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="room-modal-body">
+      <label class="room-label">Room Title</label>
+      <input type="text" id="room-title-input" maxlength="30" placeholder="e.g. Minecraft Squad">
+
+      <label class="room-label">Room ID</label>
+      <input type="text" id="room-id-input" maxlength="24" placeholder="e.g. minecraft-squad">
+      <small class="room-hint">Lowercase letters, numbers, and dashes only</small>
+
+      <label class="room-label">Privacy</label>
+      <div class="room-privacy-row">
+        <button class="room-privacy-btn active" data-privacy="public" onclick="pickPrivacy('public')">
+          <i class="fas fa-globe"></i> Public
+        </button>
+        <button class="room-privacy-btn" data-privacy="locked" onclick="pickPrivacy('locked')">
+          <i class="fas fa-lock"></i> Locked
+        </button>
+      </div>
+
+      <div id="room-password-wrap" style="display:none;">
+        <label class="room-label">Password</label>
+        <input type="password" id="room-password-input" maxlength="40" placeholder="Password for this room">
+      </div>
+
+      <button class="room-create-btn" onclick="createRoom()">
+        <i class="fas fa-plus"></i> Create Room
+      </button>
+
+      <div class="room-divider"><span>OR</span></div>
+
+      <button class="room-browse-btn" onclick="openRoomBrowser()">
+        <i class="fas fa-list"></i> Browse All Rooms
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="room-browser-overlay" class="room-overlay">
+  <div class="room-modal">
+    <div class="room-modal-header">
+      <h3>All Rooms</h3>
+      <button onclick="closeRoomBrowser()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="room-browser-tabs">
+      <button class="room-browser-tab active" data-section="public" onclick="switchRoomBrowserTab('public')">
+        <i class="fas fa-globe"></i> Public Rooms
+      </button>
+      <button class="room-browser-tab" data-section="locked" onclick="switchRoomBrowserTab('locked')">
+        <i class="fas fa-lock"></i> Locked Rooms
+      </button>
+    </div>
+    <div class="room-browser-body" id="room-browser-body">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════ TIMER WIDGET ═══════════ -->
 <div id="timer-widget" aria-label="Timer">
