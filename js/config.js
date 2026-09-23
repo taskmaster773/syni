@@ -24,7 +24,7 @@ window.SYNI_CONFIG = {
   chatOwnerPassword: 'syni7731',
 
   ciri: {
-    groqKey: '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',
+    groqKey: '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',
     edenKey: 'sk-eden-live-dlw4iNzhNlXtA31bk2Qjg-v9uD8QtCbxf8fx0lxKvhI11cc602c',
     maxAttachments: 4,
     maxImageBytes: 4 * 1024 * 1024
