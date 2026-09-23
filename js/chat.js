@@ -462,7 +462,12 @@ function chatRender(m, id, isNew){
     ownerTag = '<span class="chat-owner-tag"><i class="fas fa-crown"></i> OWNER</span>';
   }
 
-  div.innerHTML = '<div class="chat-msg-meta">' + ownerTag + '<span>' + chatEscape(m.user || 'anon') + '</span><span>' + hh + ':' + mm + '</span></div>' + chatEscape(m.text);
+  var userSafe = chatEscape(m.user || 'anon');
+var userLink = '<span class="chat-user-link" data-user="' + chatEscape(m.user || 'anon') + '" onclick="openUserProfile(this.dataset.user)">' + userSafe + '</span>';
+var imageHtml = m.image ? '<img class="chat-image-msg" src="' + m.image + '" onclick="openChatImage(this.src)">' : '';
+var textHtml = m.text ? chatEscape(m.text) : '';
+
+div.innerHTML = '<div class="chat-msg-meta">' + ownerTag + userLink + '<span>' + hh + ':' + mm + '</span></div>' + textHtml + imageHtml;
   var delBtn = document.createElement('button');
   delBtn.className = 'chat-delete-btn';
   delBtn.type = 'button';
@@ -473,6 +478,16 @@ function chatRender(m, id, isNew){
   });
   div.appendChild(delBtn);
   msgs.appendChild(div);
+
+   // Add status dot to the user link
+var user = m.user || 'anon';
+var status = getUserStatus(user);
+var link = div.querySelector('.chat-user-link');
+if(link){
+  var dot = document.createElement('span');
+  dot.className = 'status-dot-user ' + status;
+  link.parentElement.insertBefore(dot, link);
+}
 
   if(isNew && !mine){
     div.style.outline = '1px solid rgba(79,195,247,.4)';
