@@ -405,10 +405,12 @@
 </div>
   </div>
   <div class="chat-room-tabs" id="chat-room-tabs">
-  <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
-  <button class="chat-room-tab" data-room="bugs"><i class="fas fa-bug"></i> Bugs<span class="chat-tab-badge" data-badge="bugs"></span></button>
-  <button class="chat-room-tab" data-room="reviews"><i class="fas fa-star"></i> Reviews<span class="chat-tab-badge" data-badge="reviews"></span></button>
-  <button class="chat-room-tab chat-room-add" onclick="openRoomCreator()" title="Create or join a room"><i class="fas fa-plus"></i></button>
+  <div class="chat-room-tabs-scroll" id="chat-room-tabs-scroll">
+    <button class="chat-room-tab active" data-room="main-chat"><i class="fas fa-comments"></i> Main Chat<span class="chat-tab-badge" data-badge="main-chat"></span></button>
+    <button class="chat-room-tab" data-room="bugs"><i class="fas fa-bug"></i> Bugs<span class="chat-tab-badge" data-badge="bugs"></span></button>
+    <button class="chat-room-tab" data-room="reviews"><i class="fas fa-star"></i> Reviews<span class="chat-tab-badge" data-badge="reviews"></span></button>
+  </div>
+  <button class="chat-room-add" onclick="openRoomCreator()" title="Create or join a room"><i class="fas fa-plus"></i></button>
 </div>
   <div class="chat-nick-row" id="chat-nick-row" style="display:none;">
     <input type="text" id="chat-nick-input" placeholder="Pick a nickname…" maxlength="20">
