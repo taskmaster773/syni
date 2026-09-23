@@ -215,9 +215,9 @@ function joinCustomRoom(roomId, roomData){
 }
 
 function addRoomTab(roomId, title, isLocked){
-  var tabs = document.getElementById('chat-room-tabs');
-  if(!tabs) return;
-  if(tabs.querySelector('.chat-room-tab[data-room="' + roomId + '"]')) return;
+  var scroll = document.getElementById('chat-room-tabs-scroll');
+  if(!scroll) return;
+  if(scroll.querySelector('.chat-room-tab[data-room="' + roomId + '"]')) return;
 
   var btn = document.createElement('button');
   btn.className = 'chat-room-tab';
@@ -229,12 +229,17 @@ function addRoomTab(roomId, title, isLocked){
   btn.addEventListener('click', function(e){
     e.stopPropagation();
     chatSwitchRoom(roomId);
+    // Scroll the clicked tab into view
+    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   });
 
-  // Insert before the "+" button
-  var addBtn = tabs.querySelector('.chat-room-add');
-  if(addBtn) tabs.insertBefore(btn, addBtn);
-  else tabs.appendChild(btn);
+  // Always append inside the scroll strip
+  scroll.appendChild(btn);
+
+  // Auto-scroll so the new tab is visible
+  setTimeout(function(){
+    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
+  }, 50);
 }
 
 /* ---------- Auto-load rooms this user has already joined ---------- */
